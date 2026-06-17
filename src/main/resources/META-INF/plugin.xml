@@ -1,0 +1,98 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.cts.plugin.intellij.loc</id>
+    <name>GenAI LOC Tracker</name>
+    <vendor url="https://www.cts.com">CTS</vendor>
+
+    <description><![CDATA[
+        Tracks Lines of Code (LOC) generated with GenAI coding assistants
+        (Copilot, Claude, ChatGPT, Gemini, etc.) inside IntelliJ IDEA.<br/>
+        Events are posted to a backend REST API. When the service is offline,
+        events are saved locally to CSV and replayed automatically on recovery.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Notification balloon group for user-visible feedback -->
+        <notificationGroup id="GenAI LOC Tracker" displayType="BALLOON"/>
+
+        <!-- Application-level settings (persisted to genai-loc.xml) -->
+        <applicationService
+                serviceImplementation="com.cts.plugin.intellij.loc.settings.GenAiLocSettings"/>
+
+        <!-- Project-scoped service that owns the EventDispatcher and session ID.
+             CRITICAL: without this registration project.getService(...) returns null
+             and every LOC event is silently dropped. -->
+        <projectService serviceImplementation="com.cts.plugin.intellij.loc.service.GenAiLocProjectService"/>
+
+        <!-- Settings UI page: Settings → Tools → GenAI LOC Tracker -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.cts.plugin.intellij.loc.settings.GenAiLocConfigurable"
+                id="com.cts.plugin.intellij.loc.settings.GenAiLocConfigurable"
+                displayName="GenAI LOC Tracker"/>
+
+        <!-- Startup activity: pings backend and shows balloon on project open -->
+        <postStartupActivity
+                implementation="com.cts.plugin.intellij.loc.startup.GenAiLocStartupActivity"/>
+
+        <!-- Mouse click listener: detects Accept/Keep button clicks in Swing UI -->
+        <!-- <postStartupActivity
+                implementation="com.cts.plugin.intellij.loc.listeners.GenAiMouseClickListener"/> -->
+
+        <!-- JCEF click listener: DISABLED — Copilot Chat uses native Swing, not JCEF -->
+        <!-- <postStartupActivity
+                implementation="com.cts.plugin.intellij.loc.listeners.GenAiJcefClickListener"/> -->
+
+        <!-- Tool window: LOC Report panel (right side stripe) -->
+        <toolWindow id="GenAI LOC Report"
+                    anchor="right"
+                    secondary="false"
+                    factoryClass="com.cts.plugin.intellij.loc.ui.LocReportToolWindowFactory"
+                    icon="/icon/loc_icon.svg"/>
+
+    </extensions>
+
+    <!-- Actions: Tools → GenAI LOC Tracker -->
+    <actions>
+        <group id="GenAiLocTrackerGroup" text="GenAI LOC Tracker" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action
+                    id="GenAiLocTestAction"
+                    class="com.cts.plugin.intellij.loc.action.GenAiLocTestAction"
+                    text="Test Backend Connection"
+                    description="Sends a test event to the backend and shows the HTTP result"
+                    icon="/icon/loc_icon.svg"/>
+        </group>
+    </actions>
+
+    <!-- Listen to editor open events to attach the document listener -->
+    <applicationListeners>
+        <listener
+                class="com.cts.plugin.intellij.loc.listeners.GenAiDocumentListener"
+                topic="com.intellij.openapi.editor.event.EditorFactoryListener"/>
+        <!-- Intercept Keep/Accept/Apply action clicks from ANY UI surface
+             (toolbar, keyboard shortcut, JCEF Copilot Chat panel, inline editor). -->
+        <listener
+                class="com.cts.plugin.intellij.loc.listeners.CopilotActionListener"
+                topic="com.intellij.openapi.actionSystem.ex.AnActionListener"/>
+        <!-- CommandListener: drains pending LOC events after command executions
+             (covers inline Tab-accept where no Keep All click occurs). -->
+        <listener
+                class="com.cts.plugin.intellij.loc.listeners.GenAiCommandListener"
+                topic="com.intellij.openapi.command.CommandListener"/>
+
+
+        <!-- Listen to commands to catch the "Keep All" click -->
+        <listener class="com.cts.plugin.intellij.loc.listeners.LocCaptureDocumentListener"
+                  topic="com.intellij.openapi.command.CommandListener"/>
+
+        <!-- Listen to document changes globally in the project -->
+        <listener class="com.cts.plugin.intellij.loc.listeners.LocCaptureDocumentListener"
+                  topic="com.intellij.openapi.editor.event.DocumentListener"/>
+
+    </applicationListeners>
+
+</idea-plugin>

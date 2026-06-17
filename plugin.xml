@@ -1,0 +1,57 @@
+<idea-plugin>
+    <id>com.enterprise.genailoc</id>
+    <name>GenAI LOC Tracker</name>
+    <vendor email="devtools@enterprise.com" url="https://enterprise.com">Enterprise DevTools</vendor>
+    <description><![CDATA[
+    Tracks GenAI-assisted Lines of Code (LOC) per developer per project and posts
+    metrics in real-time to the enterprise GenAI LOC Tracker backend REST API.
+    Captures events when a GenAI suggestion (GitHub Copilot, AI Assistant, etc.)
+    is accepted inside IntelliJ IDEA.
+  ]]></description>
+    <version>1.0.0</version>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Notification group for user-visible feedback -->
+        <notificationGroup id="GenAI LOC Tracker"
+                           displayType="BALLOON"/>
+
+        <!-- Settings page under Tools > GenAI LOC Tracker -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.cts.plugin.intellij.loc.settings.GenAiLocConfigurable"
+                id="com.cts.plugin.intellij.loc.settings.GenAiLocConfigurable"
+                displayName="GenAI LOC Tracker"/>
+
+        <!-- Persistent settings storage -->
+        <applicationService
+                serviceImplementation="com.cts.plugin.intellij.loc.settings.GenAiLocSettings"/>
+
+        <!-- Project-level service that owns the event queue -->
+        <projectService
+                serviceImplementation="com.cts.plugin.intellij.loc.service.GenAiLocProjectService"/>
+
+        <!-- Startup activity: confirms plugin is alive, pings backend -->
+        <postStartupActivity
+                implementation="com.cts.plugin.intellij.loc.startup.GenAiLocStartupActivity"/>
+    </extensions>
+
+    <actions>
+        <!-- Tools > GenAI LOC Tracker > Test Backend Connection -->
+        <group id="GenAiLocGroup" text="GenAI LOC Tracker" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="GenAiLocTestAction"
+                    class="com.cts.plugin.intellij.loc.action.GenAiLocTestAction"
+                    text="Test Backend Connection"
+                    description="Sends a test event to the backend and shows connection status"/>
+        </group>
+    </actions>
+
+    <applicationListeners>
+        <!-- Listens to document edits at application level -->
+        <listener
+                class="com.cts.plugin.intellij.loc.listeners.GenAiDocumentListener"
+                topic="com.intellij.openapi.editor.event.EditorFactoryListener"/>
+    </applicationListeners>
+</idea-plugin>
