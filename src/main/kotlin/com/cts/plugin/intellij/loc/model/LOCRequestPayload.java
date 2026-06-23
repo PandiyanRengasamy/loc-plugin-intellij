@@ -76,6 +76,11 @@ public class LOCRequestPayload {
     /** Total number of files deleted in this event. */
     private int totalFilesDeleted;
 
+    /** Number of input (prompt) tokens consumed by the LLM for this event. Null when unknown. */
+    private Integer inputTokens;
+    /** Number of output (completion) tokens produced by the LLM for this event. Null when unknown. */
+    private Integer outputTokens;
+
     // ── Constructor (single-file, backward-compatible) ────────────────────────
 
     public LOCRequestPayload(
@@ -188,6 +193,8 @@ public class LOCRequestPayload {
     public int     getTotalFilesUpdated()    { return totalFilesUpdated; }
     public int     getTotalFilesAdded()      { return totalFilesAdded; }
     public int     getTotalFilesDeleted()    { return totalFilesDeleted; }
+    public Integer getInputTokens()          { return inputTokens; }
+    public Integer getOutputTokens()         { return outputTokens; }
 
     // Setters for new fields
     public void setLlmModel(String llmModel)                 { this.llmModel = llmModel; }
@@ -196,6 +203,8 @@ public class LOCRequestPayload {
     public void setTotalFilesUpdated(int totalFilesUpdated)   { this.totalFilesUpdated = totalFilesUpdated; }
     public void setTotalFilesAdded(int totalFilesAdded)       { this.totalFilesAdded = totalFilesAdded; }
     public void setTotalFilesDeleted(int totalFilesDeleted)   { this.totalFilesDeleted = totalFilesDeleted; }
+    public void setInputTokens(Integer inputTokens)           { this.inputTokens = inputTokens; }
+    public void setOutputTokens(Integer outputTokens)         { this.outputTokens = outputTokens; }
 
     /**
      * Adds a file-level change entry and updates the aggregated totals.

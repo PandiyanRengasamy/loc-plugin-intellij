@@ -226,6 +226,9 @@ public class EventDispatcher {
         payload.put("totalFilesUpdated",    e.getTotalFilesUpdated());
         payload.put("totalFilesAdded",      e.getTotalFilesAdded());
         payload.put("totalFilesDeleted",    e.getTotalFilesDeleted());
+        // LLM token usage
+        payload.put("inputTokens",          e.getInputTokens());
+        payload.put("outputTokens",         e.getOutputTokens());
         String json = GSON.toJson(payload);
         LOG.info("GenAI-LOC | build Standard Payload — file=" + e.getFileName()
                 + " payloadSize=" + json.length() + " chars"
