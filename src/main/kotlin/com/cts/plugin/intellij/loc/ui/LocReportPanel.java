@@ -71,6 +71,8 @@ public class LocReportPanel {
     private final JBLabel lblTotalFilesUpdated = new JBLabel("—");
     private final JBLabel lblTotalFilesAdded   = new JBLabel("—");
     private final JBLabel lblTotalFilesDeleted = new JBLabel("—");
+    private final JBLabel lblTotalInputTokens  = new JBLabel("—");
+    private final JBLabel lblTotalOutputTokens = new JBLabel("—");
     private final JBLabel lblStatus            = new JBLabel("Click Refresh to load data");
     // Human LOC % input
     // Per-row Human LOC %
@@ -86,7 +88,8 @@ public class LocReportPanel {
             "ID", "Timestamp", "File", "Tool", "Lines +", "Lines ~", "Lines −",
             "GenAI", "Model", "Agent", "Location",
             "Files Updated", "Files Added", "Files Deleted",
-            "Human LOC %", "Human LOC", "GenAI LOC"
+            "Human LOC %", "Human LOC", "GenAI LOC",
+            "Input Tokens", "Output Tokens"
     };
     private final DefaultTableModel tableModel = new DefaultTableModel(COLUMNS, 0) {
         @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -182,8 +185,10 @@ public class LocReportPanel {
         summaryPanel.add(createCard("Files Added",     lblTotalFilesAdded));
 
         summaryPanel.add(createCard("Files Deleted",   lblTotalFilesDeleted));
+        summaryPanel.add(createCard("Input Tokens",    lblTotalInputTokens));
+        summaryPanel.add(createCard("Output Tokens",   lblTotalOutputTokens));
         // Fill remaining cells for grid alignment
-        for (int i = 0; i < 4; i++) summaryPanel.add(new JLabel(""));
+        for (int i = 0; i < 2; i++) summaryPanel.add(new JLabel(""));
         verticalPanel.add(summaryPanel);
 
         // ── Human LOC controls ──────────��─────────────────────────────────���───
@@ -363,6 +368,8 @@ public class LocReportPanel {
     private static final int COL_HUMAN_LOC_PCT  = 14;  // "Human LOC %"
     private static final int COL_HUMAN_LOC      = 15;  // "Human LOC"
     private static final int COL_GENAI_LOC      = 16;  // "GenAI LOC"
+    private static final int COL_INPUT_TOKENS   = 17;  // "Input Tokens"
+    private static final int COL_OUTPUT_TOKENS  = 18;  // "Output Tokens"
 
     /**
      * Recomputes ALL summary cards by reading directly from the table model.
@@ -373,6 +380,7 @@ public class LocReportPanel {
         int genAiEvents = 0, manualEvents = 0;
         int totalLinesAdded = 0, totalLinesModified = 0, totalLinesDeleted = 0;
         int totalFilesUpdated = 0, totalFilesAdded = 0, totalFilesDeleted = 0;
+        int totalInputTokens = 0, totalOutputTokens = 0;
         double totalHumanLoc = 0.0, totalGenAiLoc = 0.0;
 
         for (int i = 0; i < rowCount; i++) {
@@ -386,6 +394,9 @@ public class LocReportPanel {
             totalFilesUpdated += parseIntCell(tableModel.getValueAt(i, COL_FILES_UPDATED));
             totalFilesAdded   += parseIntCell(tableModel.getValueAt(i, COL_FILES_ADDED));
             totalFilesDeleted += parseIntCell(tableModel.getValueAt(i, COL_FILES_DELETED));
+
+            totalInputTokens  += parseIntCell(tableModel.getValueAt(i, COL_INPUT_TOKENS));
+            totalOutputTokens += parseIntCell(tableModel.getValueAt(i, COL_OUTPUT_TOKENS));
 
             totalHumanLoc += Math.max(0, parseDoubleCell(tableModel.getValueAt(i, COL_HUMAN_LOC)));
             totalGenAiLoc += Math.max(0, parseDoubleCell(tableModel.getValueAt(i, COL_GENAI_LOC)));
@@ -404,6 +415,8 @@ public class LocReportPanel {
         lblTotalFilesUpdated.setText(String.valueOf(totalFilesUpdated));
         lblTotalFilesAdded.setText(String.valueOf(totalFilesAdded));
         lblTotalFilesDeleted.setText(String.valueOf(totalFilesDeleted));
+        lblTotalInputTokens.setText(String.valueOf(totalInputTokens));
+        lblTotalOutputTokens.setText(String.valueOf(totalOutputTokens));
         lblGenAiAdoption.setText(String.format("%.1f%%", adoptionPct));
         lblHumanContribution.setText(String.format("%.1f%%", humanPct));
     }
@@ -572,7 +585,9 @@ public class LocReportPanel {
                         String.valueOf(fDel),          // 13 Files Deleted
                         humanLocPercent,               // 14 Human LOC %
                         String.format("%.2f", humanLoc),  // 15 Human LOC
-                        String.format("%.2f", genAiLoc)   // 16 GenAI LOC
+                        String.format("%.2f", genAiLoc),  // 16 GenAI LOC
+                        String.valueOf(intVal(resJs, "inputTokens")),   // 17 Input Tokens
+                        String.valueOf(intVal(resJs, "outputTokens"))   // 18 Output Tokens
                 };
                 rows.add(row);
             }
@@ -600,6 +615,8 @@ public class LocReportPanel {
                 lblLinesDeleted.setText("N/A");
                 lblGenAiAdoption.setText("N/A");
                 lblHumanContribution.setText("N/A");
+                lblTotalInputTokens.setText("N/A");
+                lblTotalOutputTokens.setText("N/A");
             });
         }
     }
